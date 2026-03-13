@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="my">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>သော့စလစ်စနစ်</title>
+
+    <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/zayar-min-tun/key-system/main/icon.png">
+    <link rel="icon" href="https://raw.githubusercontent.com/mishinsu11-ux/key-system/main/icon.png">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        @font-face { font-family: 'Pyidaungsu'; src: local('Pyidaungsu'); }
+        body { font-family: 'Pyidaungsu', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
+        #input-panel { max-width: 650px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #1a5d1a; margin-top: 0; border-bottom: 2px solid #1a5d1a; padding-bottom: 15px; margin-bottom: 20px; }
+        .form-group { margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 11pt; }
+        input, select { width: 100%; padding: 10px; border: 1px solid #ccc; border-radius: 8px; font-family: 'Pyidaungsu'; font-size: 11pt; box-sizing: border-box; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .section-title { background: #eee; padding: 8px; margin: 15px 0 10px 0; font-weight: bold; border-radius: 4px; border-left: 4px solid #1a5d1a; }
+        .btn-main { width: 100%; padding: 15px; background: #1a5d1a; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 13pt; cursor: pointer; margin-top: 15px; }
+        .btn-bulk { background: #2c3e50; }
+        
+        .voucher-page { background: white; margin: 0 auto 20px auto; padding: 0.3in; width: 148mm; min-height: 210mm; position: relative; box-sizing: border-box; border: 1px solid #eee; page-break-after: always; display: flex; flex-direction: column; }
+        .ultra-bold { font-weight: bold; text-shadow: 0.2px 0 0 #000, -0.2px 0 0 #000, 0 0.2px 0 #000, 0 -0.2px 0 #000; text-align: center; }
+        
+        .confidential-top { font-size: 15pt; margin-bottom: 2px; }
+        /* Logo မရှိတော့သဖြင့် Title နေရာလွတ်ကို အနည်းငယ် ပြန်ညှိလိုက်သည် */
+        .main-title { font-size: 14pt; line-height: 1.6; margin: 20px 0 45px 0; }
+        
+        .row { display: flex; align-items: baseline; margin-bottom: 12px; font-size: 13pt; }
+        .line { border-bottom: 1px solid black; flex-grow: 1; margin-left: 10px; position: relative; min-height: 22px; }
+        .data-val { position: absolute; bottom: 2px; left: 10px; font-weight: normal; }
+        .auth-officer { text-align: center; margin: 35px 0 10px 0; font-size: 13.5pt; }
+        .spacer { flex-grow: 1; min-height: 100px; }
+        .footer-grid { display: flex; justify-content: space-between; margin-bottom: 20px; }
+        .col { width: 48%; }
+        .col-title { margin-bottom: 15px; font-size: 13.5pt; text-align: center; }
+        .sub-row { display: flex; align-items: baseline; margin-bottom: 6px; font-size: 12pt; }
+        .sub-line { border-bottom: 1px solid black; flex-grow: 1; margin-left: 5px; position: relative; min-height: 20px; }
+        .footer-confidential { text-align: center; font-size: 15pt; padding-top: 10px; }
+        
+        #output-area { display: none; }
+        .toolbar { position: fixed; top: 0; left: 0; width: 100%; background: #333; padding: 10px; display: flex; gap: 10px; z-index: 9999; justify-content: center; }
+        .btn-tool { color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-family: 'Pyidaungsu'; font-weight: bold; }
+        .btn-back { background: #666; }
+        .btn-png { background: #e67e22; }
+
+        @media print { body { padding: 0; background: white; } #input-panel, .toolbar { display: none !important; } #output-area { display: block !important; } .voucher-page { border: none; margin: 0; } }
+    </style>
+</head>
+<body>
+
+<div id="input-panel">
+    <h2>အချက်အလက်သွင်းရန်</h2>
+    
+    <div class="grid">
+        <div class="form-group">
+            <label>တပ်ခွဲ/ဌာန</label>
+            <select id="inDept">
+                <option value="ဌနခတပ်ခွဲ">ဌနခတပ်ခွဲ</option>
+                <option value="ခွဲ(၁)">ခွဲ(၁)</option>
+                <option value="ခွဲ(၂)">ခွဲ(၂)</option>
+                <option value="အလရတပ်ခွဲ">အလရတပ်ခွဲ</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>ရက်စွဲ</label>
+            <input type="text" id="inDate" placeholder="ဥပမာ - ၁၃-၃-၂၀၂၆">
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label>အကြောင်းအရာ</label>
+        <select id="inReason" onchange="autoTime()">
+            <option value="">-- ရွေးချယ်ပါ --</option>
+            <option value="လက်နက်တိုက်/သန့်ရှင်းရေးလုပ်ရန်">လက်နက်တိုက်/သန့်ရှင်းရေးလုပ်ရန်</option>
+            <option value="စစ်ဆင်ရေးထုတ်ပေးရန်">စစ်ဆင်ရေးထုတ်ပေးရန်</option>
+            <option value="လုံခြုံရေးထုတ်ပေးရန်">လုံခြုံရေးထုတ်ပေးရန်</option>
+        </select>
+    </div>
+
+    <div class="grid">
+        <div class="form-group">
+            <label>ထုတ်ယူချိန်</label>
+            <input type="time" id="inTime" onchange="autoTime()">
+        </div>
+        <div class="form-group">
+            <label>ပြန်အပ်ချိန်</label>
+            <input type="text" id="resInTime">
+        </div>
+    </div>
+
+    <div class="section-title">သော့ထုတ်ယူသူ အချက်အလက်</div>
+    <div class="grid">
+        <input type="text" id="t1_id" value="တ-၂၆၁၃၈၈" placeholder="ကိုယ်ပိုင်အမှတ်">
+        <input type="text" id="t1_name" value="အရခဗ သန့်ဇင်မျိုး" placeholder="အဆင့်/အမည်">
+    </div>
+
+    <div class="section-title">သော့ထုတ်ပေးသူ (ကင်းမှူး) အချက်အလက်</div>
+    <div class="grid">
+        <input type="text" id="t2_id" value="တ-၂၀၆၁၀၀" placeholder="ကိုယ်ပိုင်အမှတ်">
+        <input type="text" id="t2_name" value="တက ဥက္ကာကျော်" placeholder="အဆင့်/အမည်">
+    </div>
+
+    <button class="btn-main" onclick="generateSingle()">ဘောင်ချာတစ်စောင်တည်းထုတ်မည်</button>
+    <div class="form-group" style="margin-top:20px;">
+        <label>လအလိုက် အများအပြားထုတ်ရန် (လရွေးပါ)</label>
+        <input type="month" id="bulkMonth">
+    </div>
+    <button class="btn-main btn-bulk" onclick="generateBulk()">လအလိုက် အများအပြားထုတ်မည်</button>
+</div>
+
+<div id="output-area">
+    <div class="toolbar no-print">
+        <button class="btn-tool btn-back" onclick="location.reload()">← ပြန်ပြင်ရန်</button>
+        <button class="btn-tool btn-png" onclick="downloadPNG()">PNG အဖြစ်သိမ်းမည်</button>
+        <button class="btn-tool" style="background: #1a5d1a;" onclick="window.print()">Print ထုတ်မည်</button>
+    </div>
+    <div id="pages-container" style="margin-top: 60px;"></div>
+</div>
+
+<script>
+    function toMyanmarDigits(str) {
+        const mm = ['၀','၁','၂','၃','၄','၅','၆','၇','၈','၉'];
+        return str.toString().replace(/[0-9]/g, function(w){ return mm[w]; });
+    }
+
+    function autoTime() {
+        const t = document.getElementById('inTime').value;
+        const r = document.getElementById('inReason').value;
+        if(!t || !r) return;
+        let [h, m] = t.split(':').map(Number);
+        let d = new Date(); d.setHours(h); d.setMinutes(m);
+        if(r === "လက်နက်တိုက်ရန်နှင့်သန့်ရှင်းရေးလုပ်ရန်") d.setHours(d.getHours()+2);
+        else d.setMinutes(d.getMinutes()+30);
+        document.getElementById('resInTime').value = d.getHours().toString().padStart(2,'0') + ":" + d.getMinutes().toString().padStart(2,'0');
+    }
+
+    function createVoucherHTML(dept, reason, date, outT, inT) {
+        const mmDate = toMyanmarDigits(date);
+        const mmOutT = toMyanmarDigits(outT);
+        const mmInT = toMyanmarDigits(inT);
+        const mmUnit = toMyanmarDigits('၇၀၁၀');
+        
+        const t1_id = toMyanmarDigits(document.getElementById('t1_id').value);
+        const t1_name = document.getElementById('t1_name').value;
+        const t2_id = toMyanmarDigits(document.getElementById('t2_id').value);
+        const t2_name = document.getElementById('t2_name').value;
+
+        return `
+        <div class="voucher-page">
+            <div class="ultra-bold confidential-top">လျှို့ဝှက်</div>
+            <div class="ultra-bold main-title">လက်နက်စတို/ရိက္ခာစတို/စစ်ဝတ်စတိုသော့များ<br>ထုတ်ယူခွင့်အမိန့်အာဏာ</div>
+            <div class="row">ထုတ်ယူသည့်တပ်ခွဲ/ဌာန <span class="line"><span class="data-val">${dept}</span></span></div>
+            <div class="row">ထုတ်ယူလိုသည့်အကြောင်းအရာ <span class="line"><span class="data-val">${reason}</span></span></div>
+            <div class="row">ထုတ်ယူလိုသည့် ရက်စွဲ/အချိန် <span class="line"><span class="data-val">${mmDate} / ${mmOutT}</span></span></div>
+            <div class="row">သော့ပြန်လည်အပ်နှံချိန် <span class="line"><span class="data-val">${mmDate} / ${mmInT}</span></span></div>
+            <div class="auth-officer ultra-bold">သော့ထုတ်ယူခွင့်ပြုသူအရာရှိ</div>
+            <div class="spacer"></div>
+            <div class="footer-grid">
+                <div class="col">
+                    <div class="col-title ultra-bold">သော့ထုတ်ယူသူ</div>
+                    <div class="sub-row">လက်မှတ် <span class="sub-line"></span></div>
+                    <div class="sub-row">ကိုယ်ပိုင်အမှတ် <span class="sub-line"><span class="data-val">${t1_id}</span></span></div>
+                    <div class="sub-row">အဆင့်/အမည် <span class="sub-line"><span class="data-val">${t1_name}</span></span></div>
+                    <div class="sub-row">နေရာ <span class="sub-line"><span class="data-val">သတရ(${mmUnit})</span></span></div>
+                    <div class="sub-row">ရက်စွဲ <span class="sub-line"><span class="data-val">${mmDate}</span></span></div>
+                </div>
+                <div class="col">
+                    <div class="col-title ultra-bold">သော့ထုတ်ပေးသူ(ကင်းမှူး)</div>
+                    <div class="sub-row">လက်မှတ် <span class="sub-line"></span></div>
+                    <div class="sub-row">ကိုယ်ပိုင်အမှတ် <span class="sub-line"><span class="data-val">${t2_id}</span></span></div>
+                    <div class="sub-row">အဆင့်/အမည် <span class="sub-line"><span class="data-val">${t2_name}</span></span></div>
+                    <div class="sub-row">နေရာ <span class="sub-line"><span class="data-val">သတရ(${mmUnit})</span></span></div>
+                    <div class="sub-row">ရက်စွဲ <span class="sub-line"><span class="data-val">${mmDate}</span></span></div>
+                </div>
+            </div>
+            <div class="footer-confidential ultra-bold">လျှို့ဝှက်</div>
+        </div>`;
+    }
+
+    function downloadPNG() {
+        const pages = document.querySelectorAll('.voucher-page');
+        pages.forEach((page, index) => {
+            html2canvas(page, { scale: 3 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `voucher_${index + 1}.png`;
+                link.href = canvas.toDataURL("image/png");
+                link.click();
+            });
+        });
+    }
+
+    function generateSingle() {
+        const date = document.getElementById('inDate').value;
+        const outT = document.getElementById('inTime').value;
+        const inT = document.getElementById('resInTime').value;
+        if(!outT || !date) { alert("ရက်စွဲနှင့် အချိန်ဖြည့်ပါ"); return; }
+        document.getElementById('pages-container').innerHTML = createVoucherHTML(document.getElementById('inDept').value, document.getElementById('inReason').value, date, outT, inT);
+        showOutput();
+    }
+
+    function generateBulk() {
+        const monthVal = document.getElementById('bulkMonth').value;
+        const outT = document.getElementById('inTime').value;
+        const inT = document.getElementById('resInTime').value;
+        if(!monthVal || !outT) { alert("အချက်အလက်များ ပြည့်စုံစွာဖြည့်ပါ"); return; }
+        let [year, month] = monthVal.split('-').map(Number);
+        let daysInMonth = new Date(year, month, 0).getDate();
+        let bulkHTML = "";
+        for (let day = 1; day <= daysInMonth; day++) {
+            let d = new Date(year, month - 1, day);
+            if (d.getDay() !== 0 && d.getDay() !== 6) {
+                bulkHTML += createVoucherHTML(document.getElementById('inDept').value, document.getElementById('inReason').value, day + "-" + month + "-" + year, outT, inT);
+            }
+        }
+        document.getElementById('pages-container').innerHTML = bulkHTML;
+        showOutput();
+    }
+
+    function showOutput() {
+        document.getElementById('input-panel').style.display = 'none';
+        document.getElementById('output-area').style.display = 'block';
+    }
+</script>
+</body>
+</html>
