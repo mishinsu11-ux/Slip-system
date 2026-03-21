@@ -8,7 +8,9 @@
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/zayar-min-tun/key-system/main/icon.png">
     <link rel="icon" href="https://raw.githubusercontent.com/mishinsu11-ux/key-system/main/icon.png">
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
     <style>
         @font-face { font-family: 'Pyidaungsu'; src: local('Pyidaungsu'); }
         body { font-family: 'Pyidaungsu', sans-serif; background: #f4f7f6; margin: 0; padding: 20px; }
@@ -115,7 +117,7 @@
     <div class="toolbar no-print">
         <button class="btn-tool btn-back" onclick="location.reload()">← ပြန်ပြင်ရန်</button>
         <button class="btn-tool btn-png" onclick="downloadPNG()">PNG အဖြစ်သိမ်းမည်</button>
-        <button class="btn-tool" style="background: #1a5d1a;" onclick="shareVoucher()">Share လုပ်မည်</button>
+        <button id="actionBtn" class="btn-tool" style="background: #1a5d1a;" onclick="handleVoucherAction()">PDF သိမ်းဆည်းမည်</button>
     </div>
     <div id="pages-container" style="margin-top: 60px;"></div>
 </div>
@@ -148,8 +150,7 @@
         const t2_id = toMyanmarDigits(document.getElementById('t2_id').value);
         const t2_name = document.getElementById('t2_name').value;
 
-        return `
-        <div class="voucher-page">
+        return `<div class="voucher-page">
             <div class="ultra-bold confidential-top">လျှို့ဝှက်</div>
             <div class="ultra-bold main-title">လက်နက်စတို/ရိက္ခာစတို/စစ်ဝတ်စတိုသော့များ<br>ထုတ်ယူခွင့်အမိန့်အာဏာ</div>
             <div class="row">ထုတ်ယူသည့်တပ်ခွဲ/ဌာန <span class="line"><span class="data-val">${dept}</span></span></div>
@@ -192,31 +193,58 @@
         });
     }
 
-    async function shareVoucher() {
+    async function handleVoucherAction() {
         const pages = document.querySelectorAll('.voucher-page');
         if (pages.length === 0) { alert("ဝောက်ချာ မရှိသေးပါ"); return; }
 
-        try {
-            const files = [];
-            for (let i = 0; i < pages.length; i++) {
-                const canvas = await html2canvas(pages[i], { scale: 3 });
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                const file = new File([blob], `voucher_${i + 1}.png`, { type: 'image/png' });
-                files.push(file);
-            }
+        const btn = document.getElementById('actionBtn');
+        const originalText = btn.innerText;
+        btn.innerText = "လုပ်ဆောင်နေသည်...";
+        btn.disabled = true;
 
-            if (navigator.share && navigator.canShare && navigator.canShare({ files: files })) {
-                await navigator.share({
-                    title: 'Voucher Share',
-                    text: `စုစုပေါင်း ဝောက်ချာ (${pages.length}) စောင်`,
-                    files: files
-                });
+        try {
+            if (pages.length === 1) {
+                // တစ်စောင်တည်းဆိုလျှင် Share စနစ်ကိုပဲ သုံးပါမည်
+                const canvas = await html2canvas(pages[0], { scale: 2 });
+                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+                const file = new File([blob], "voucher.png", { type: "image/png" });
+                if (navigator.share) {
+                    await navigator.share({ files: [file] });
+                } else {
+                    const link = document.createElement('a');
+                    link.download = "voucher.png";
+                    link.href = canvas.toDataURL();
+                    link.click();
+                }
             } else {
-                alert("သင့် Browser သည် Share စနစ်ကို အထောက်အပံ့မပေးပါ။ PNG အဖြစ် သိမ်းဆည်းပါ။");
+                // ပုံအများကြီးဆိုလျှင် PDF Save (Download) လုပ်ပါမည်
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a5');
+                
+                const monthVal = document.getElementById('bulkMonth').value; 
+                let fileName = "သော့စလစ်.pdf";
+                if(monthVal) {
+                    const [y, m] = monthVal.split('-');
+                    fileName = `${m}-${y}-သော့စလစ်.pdf`;
+                }
+
+                for (let i = 0; i < pages.length; i++) {
+                    const canvas = await html2canvas(pages[i], { scale: 1.5 });
+                    const imgData = canvas.toDataURL('image/jpeg', 0.8);
+                    if (i > 0) pdf.addPage('a5', 'p');
+                    pdf.addImage(imgData, 'JPEG', 0, 0, 148, 210);
+                    if (i % 5 === 0) await new Promise(r => setTimeout(r, 100));
+                }
+                
+                pdf.save(fileName);
+                alert(fileName + " အမည်ဖြင့် PDF သိမ်းဆည်းပြီးပါပြီ။");
             }
         } catch (err) {
-            console.error("Error sharing:", err);
-            alert("Share လုပ်ရာတွင် အမှားအယွင်းရှိပါသည်။");
+            console.error(err);
+            alert("share မလုပ်ရ‌‌ပါ။ ပြန်စမ်းကြည့်ပါ။");
+        } finally {
+            btn.innerText = originalText;
+            btn.disabled = false;
         }
     }
 
@@ -225,6 +253,7 @@
         const outT = document.getElementById('inTime').value;
         const inT = document.getElementById('resInTime').value;
         if(!outT || !date) { alert("ရက်စွဲနှင့် အချိန်ဖြည့်ပါ"); return; }
+        document.getElementById('actionBtn').innerText = "Share လုပ်မည်"; // တစ်စောင်တည်းဆိုလျှင် Share ဟုပြပါမည်
         document.getElementById('pages-container').innerHTML = createVoucherHTML(document.getElementById('inDept').value, document.getElementById('inReason').value, date, outT, inT);
         showOutput();
     }
@@ -234,6 +263,8 @@
         const outT = document.getElementById('inTime').value;
         const inT = document.getElementById('resInTime').value;
         if(!monthVal || !outT) { alert("အချက်အလက်များ ပြည့်စုံစွာဖြည့်ပါ"); return; }
+        document.getElementById('actionBtn').innerText = "PDF သိမ်းဆည်းမည်"; // အများကြီးဆိုလျှင် PDF သိမ်းဆည်းမည် ဟုပြပါမည်
+        
         let [year, month] = monthVal.split('-').map(Number);
         let daysInMonth = new Date(year, month, 0).getDate();
         let bulkHTML = "";
