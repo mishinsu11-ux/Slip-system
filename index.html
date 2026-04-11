@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>သော့စလစ်စနစ်</title>
+    <title>သော့စလစ်စနစ် (၂၀၂၆ Update)</title>
 
     <link rel="apple-touch-icon" href="https://raw.githubusercontent.com/zayar-min-tun/key-system/main/icon.png">
     <link rel="icon" href="https://raw.githubusercontent.com/mishinsu11-ux/key-system/main/icon.png">
@@ -23,13 +23,23 @@
         .section-title { background: #eee; padding: 8px; margin: 15px 0 10px 0; font-weight: bold; border-radius: 4px; border-left: 4px solid #1a5d1a; }
         .btn-main { width: 100%; padding: 15px; background: #1a5d1a; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 13pt; cursor: pointer; margin-top: 15px; }
         .btn-bulk { background: #2c3e50; }
-        
+        .btn-setup { background: #7f8c8d; padding: 10px; font-size: 11pt; }
+
+        /* Calendar Modal */
+        #holiday-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 10000; justify-content: center; align-items: center; }
+        .modal-content { background: white; padding: 20px; border-radius: 15px; width: 95%; max-width: 400px; text-align: center; }
+        .cal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; font-weight: bold; }
+        .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+        .cal-day-name { font-size: 9pt; color: #666; padding: 5px 0; }
+        .cal-date { padding: 8px 0; border-radius: 6px; cursor: pointer; font-size: 10pt; border: 1px solid #eee; }
+        .cal-date.is-holiday { background: #e74c3c !important; color: white !important; border-color: #c0392b; }
+        .cal-date.not-current { color: #ccc; pointer-events: none; border: none; }
+
+        /* Voucher Styles (Strictly Unchanged) */
         .voucher-page { background: white; margin: 0 auto 20px auto; padding: 0.3in; width: 148mm; min-height: 210mm; position: relative; box-sizing: border-box; border: 1px solid #eee; page-break-after: always; display: flex; flex-direction: column; }
         .ultra-bold { font-weight: bold; text-shadow: 0.2px 0 0 #000, -0.2px 0 0 #000, 0 0.2px 0 #000, 0 -0.2px 0 #000; text-align: center; }
-        
         .confidential-top { font-size: 15pt; margin-bottom: 2px; }
         .main-title { font-size: 14pt; line-height: 1.6; margin: 20px 0 45px 0; }
-        
         .row { display: flex; align-items: baseline; margin-bottom: 12px; font-size: 13pt; }
         .line { border-bottom: 1px solid black; flex-grow: 1; margin-left: 10px; position: relative; min-height: 22px; }
         .data-val { position: absolute; bottom: 2px; left: 10px; font-weight: normal; }
@@ -47,8 +57,7 @@
         .btn-tool { color: white; border: none; padding: 8px 15px; border-radius: 4px; cursor: pointer; font-family: 'Pyidaungsu'; font-weight: bold; }
         .btn-back { background: #666; }
         .btn-png { background: #e67e22; }
-
-        @media print { body { padding: 0; background: white; } #input-panel, .toolbar { display: none !important; } #output-area { display: block !important; } .voucher-page { border: none; margin: 0; } }
+        @media print { body { padding: 0; background: white; } #input-panel, .toolbar, #holiday-modal { display: none !important; } #output-area { display: block !important; } .voucher-page { border: none; margin: 0; } }
     </style>
 </head>
 <body>
@@ -73,7 +82,7 @@
     </div>
 
     <div class="form-group">
-        <label>အကြောင်းအရာ (ရွေးချယ်ပါ သို့မဟုတ် ရိုက်ထည့်ပါ)</label>
+        <label>အကြောင်းအရာ</label>
         <input list="reason-list" id="inReason" onchange="autoTime()" placeholder="အကြောင်းအရာ ရိုက်ထည့်ပါ">
         <datalist id="reason-list">
             <option value="လက်နက်တိုက်/သန့်ရှင်းရေးလုပ်ရန်">
@@ -93,36 +102,115 @@
         </div>
     </div>
 
-    <div class="section-title">သော့ထုတ်ယူသူ အချက်အလက်</div>
+    <div class="section-title">သော့ထုတ်ယူသူ/ပေးသူ အချက်အလက်</div>
     <div class="grid">
         <input type="text" id="t1_id" value="တ-၂၆၁၃၈၈" placeholder="ကိုယ်ပိုင်အမှတ်">
         <input type="text" id="t1_name" value="အရခဗ သန့်ဇင်မျိုး" placeholder="အဆင့်/အမည်">
     </div>
-
-    <div class="section-title">သော့ထုတ်ပေးသူ (ကင်းမှူး) အချက်အလက်</div>
-    <div class="grid">
+    <div class="grid" style="margin-top:10px;">
         <input type="text" id="t2_id" value="တ-၂၀၆၁၀၀" placeholder="ကိုယ်ပိုင်အမှတ်">
         <input type="text" id="t2_name" value="တက ဥက္ကာကျော်" placeholder="အဆင့်/အမည်">
     </div>
 
     <button class="btn-main" onclick="generateSingle()">ဘောင်ချာတစ်စောင်တည်းထုတ်မည်</button>
-    <div class="form-group" style="margin-top:20px;">
-        <label>လအလိုက် အများအပြားထုတ်ရန် (လရွေးပါ)</label>
+    
+    <div class="section-title">လအလိုက် အများအပြားထုတ်ရန်</div>
+    <div class="form-group">
+        <label>လရွေးပါ</label>
         <input type="month" id="bulkMonth">
     </div>
     <button class="btn-main btn-bulk" onclick="generateBulk()">လအလိုက် အများအပြားထုတ်မည်</button>
+    <button class="btn-main btn-setup" onclick="openHolidayModal()">⚙️ ရုံးပိတ်ရက်များ သတ်မှတ်ရန် (Calendar)</button>
+</div>
+
+<div id="holiday-modal">
+    <div class="modal-content">
+        <div class="cal-header">
+            <button onclick="changeCalMonth(-1)">◀</button>
+            <span id="calMonthDisplay"></span>
+            <button onclick="changeCalMonth(1)">▶</button>
+        </div>
+        <div class="cal-grid" id="calGrid"></div>
+        <p style="font-size: 8pt; color: #e74c3c; margin-top: 10px;">* အနီရောင်သည် ပိတ်ရက်ဖြစ်သည်။ နှိပ်၍ အဖွင့်/အပိတ် လုပ်ပါ။</p>
+        <button class="btn-main" style="background:#2c3e50;" onclick="closeHolidayModal()">သိမ်းမည်</button>
+    </div>
 </div>
 
 <div id="output-area">
     <div class="toolbar no-print">
         <button class="btn-tool btn-back" onclick="location.reload()">← ပြန်ပြင်ရန်</button>
-        <button class="btn-tool btn-png" onclick="downloadPNG()">PNG အဖြစ်သိမ်းမည်</button>
+        <button class="btn-tool btn-png" onclick="downloadPNG()">PNG သိမ်းမည်</button>
         <button id="actionBtn" class="btn-tool" style="background: #1a5d1a;" onclick="handleVoucherAction()">PDF သိမ်းဆည်းမည်</button>
     </div>
     <div id="pages-container" style="margin-top: 60px;"></div>
 </div>
 
 <script>
+    // ၂၀၂၆ မူရင်းရုံးပိတ်ရက်များ (စစ်ဆေးပြင်ဆင်ပြီး)
+    const defaultHolidays = [
+        "2026-1-4", "2026-2-12", "2026-3-2", "2026-3-27",
+        "2026-4-11", "2026-4-12", "2026-4-13", "2026-4-14", "2026-4-15", "2026-4-16", "2026-4-17", // သင်္ကြန်ကာလ
+        "2026-4-30", // ကဆုန်လပြည့်
+        "2026-5-1", "2026-7-19", "2026-7-29", 
+        "2026-10-25", "2026-10-26", "2026-10-27", 
+        "2026-11-23", "2026-11-24", "2026-12-25"
+    ];
+
+    let officialHolidays = JSON.parse(localStorage.getItem('mm_holidays')) || defaultHolidays;
+    let currentCalDate = new Date(2026, 0, 1);
+
+    function openHolidayModal() {
+        document.getElementById('holiday-modal').style.display = 'flex';
+        renderCalendar();
+    }
+
+    function closeHolidayModal() {
+        document.getElementById('holiday-modal').style.display = 'none';
+        localStorage.setItem('mm_holidays', JSON.stringify(officialHolidays));
+    }
+
+    function renderCalendar() {
+        const grid = document.getElementById('calGrid');
+        const display = document.getElementById('calMonthDisplay');
+        grid.innerHTML = "";
+        const year = currentCalDate.getFullYear();
+        const month = currentCalDate.getMonth();
+        display.innerText = `${year} ခုနှစ်၊ ${month + 1} လ`;
+
+        ['နွေ','လာ','ဂါ','ဟူး','တေး','ကြာ','နေ'].forEach(d => {
+            grid.innerHTML += `<div class="cal-day-name">${d}</div>`;
+        });
+
+        const firstDay = new Date(year, month, 1).getDay();
+        const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+        for(let i=0; i<firstDay; i++) grid.innerHTML += `<div class="cal-date not-current"></div>`;
+
+        for(let day=1; day<=daysInMonth; day++) {
+            const dateStr = `${year}-${month+1}-${day}`;
+            const tempDate = new Date(year, month, day);
+            const isWeekend = (tempDate.getDay() === 0 || tempDate.getDay() === 6);
+            
+            if (isWeekend && !officialHolidays.includes(dateStr)) {
+                officialHolidays.push(dateStr);
+            }
+
+            const isHoliday = officialHolidays.includes(dateStr) ? "is-holiday" : "";
+            grid.innerHTML += `<div class="cal-date ${isHoliday}" onclick="toggleHoliday('${dateStr}')">${day}</div>`;
+        }
+    }
+
+    function toggleHoliday(date) {
+        if(officialHolidays.includes(date)) officialHolidays = officialHolidays.filter(d => d !== date);
+        else officialHolidays.push(date);
+        renderCalendar();
+    }
+
+    function changeCalMonth(val) {
+        currentCalDate.setMonth(currentCalDate.getMonth() + val);
+        renderCalendar();
+    }
+
     function toMyanmarDigits(str) {
         const mm = ['၀','၁','၂','၃','၄','၅','၆','၇','၈','၉'];
         return str.toString().replace(/[0-9]/g, function(w){ return mm[w]; });
@@ -143,12 +231,11 @@
         const mmDate = toMyanmarDigits(date);
         const mmOutT = toMyanmarDigits(outT);
         const mmInT = toMyanmarDigits(inT);
-        const mmUnit = toMyanmarDigits('၇၀၁၀');
-        
         const t1_id = toMyanmarDigits(document.getElementById('t1_id').value);
         const t1_name = document.getElementById('t1_name').value;
         const t2_id = toMyanmarDigits(document.getElementById('t2_id').value);
         const t2_name = document.getElementById('t2_name').value;
+        const mmUnit = toMyanmarDigits('၇၀၁၀');
 
         return `<div class="voucher-page">
             <div class="ultra-bold confidential-top">လျှို့ဝှက်</div>
@@ -181,100 +268,57 @@
         </div>`;
     }
 
+    function generateBulk() {
+        const monthVal = document.getElementById('bulkMonth').value;
+        const outT = document.getElementById('inTime').value;
+        const inT = document.getElementById('resInTime').value;
+        if(!monthVal || !outT) { alert("လ နှင့် အချိန် ရွေးချယ်ပေးပါ"); return; }
+        let [year, month] = monthVal.split('-').map(Number);
+        let daysInMonth = new Date(year, month, 0).getDate();
+        let bulkHTML = "";
+        for (let day = 1; day <= daysInMonth; day++) {
+            let dateKey = `${year}-${month}-${day}`;
+            if (!officialHolidays.includes(dateKey)) {
+                bulkHTML += createVoucherHTML(document.getElementById('inDept').value, document.getElementById('inReason').value, day + "-" + month + "-" + year, outT, inT);
+            }
+        }
+        document.getElementById('pages-container').innerHTML = bulkHTML;
+        showOutput();
+    }
+
+    async function handleVoucherAction() {
+        const pages = document.querySelectorAll('.voucher-page');
+        if (pages.length === 0) return;
+        const btn = document.getElementById('actionBtn');
+        btn.innerText = "လုပ်ဆောင်နေသည်..."; btn.disabled = true;
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF('p', 'mm', 'a5');
+        for (let i = 0; i < pages.length; i++) {
+            const canvas = await html2canvas(pages[i], { scale: 1.5 });
+            if (i > 0) pdf.addPage('a5', 'p');
+            pdf.addImage(canvas.toDataURL('image/jpeg', 0.8), 'JPEG', 0, 0, 148, 210);
+        }
+        pdf.save("သော့စလစ်များ.pdf");
+        btn.innerText = "PDF သိမ်းဆည်းမည်"; btn.disabled = false;
+    }
+
     function downloadPNG() {
         const pages = document.querySelectorAll('.voucher-page');
+        if (pages.length === 0) return;
         pages.forEach((page, index) => {
-            html2canvas(page, { scale: 3 }).then(canvas => {
+            html2canvas(page, { scale: 2 }).then(canvas => {
                 const link = document.createElement('a');
-                link.download = `voucher_${index + 1}.png`;
-                link.href = canvas.toDataURL("image/png");
+                link.download = `Voucher_${index + 1}.png`;
+                link.href = canvas.toDataURL();
                 link.click();
             });
         });
     }
 
-    async function handleVoucherAction() {
-        const pages = document.querySelectorAll('.voucher-page');
-        if (pages.length === 0) { alert("ဝောက်ချာ မရှိသေးပါ"); return; }
-
-        const btn = document.getElementById('actionBtn');
-        const originalText = btn.innerText;
-        btn.innerText = "လုပ်ဆောင်နေသည်...";
-        btn.disabled = true;
-
-        try {
-            if (pages.length === 1) {
-                // တစ်စောင်တည်းဆိုလျှင် Share စနစ်ကိုပဲ သုံးပါမည်
-                const canvas = await html2canvas(pages[0], { scale: 2 });
-                const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
-                const file = new File([blob], "voucher.png", { type: "image/png" });
-                if (navigator.share) {
-                    await navigator.share({ files: [file] });
-                } else {
-                    const link = document.createElement('a');
-                    link.download = "voucher.png";
-                    link.href = canvas.toDataURL();
-                    link.click();
-                }
-            } else {
-                // ပုံအများကြီးဆိုလျှင် PDF Save (Download) လုပ်ပါမည်
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF('p', 'mm', 'a5');
-                
-                const monthVal = document.getElementById('bulkMonth').value; 
-                let fileName = "သော့စလစ်.pdf";
-                if(monthVal) {
-                    const [y, m] = monthVal.split('-');
-                    fileName = `${m}-${y}-သော့စလစ်.pdf`;
-                }
-
-                for (let i = 0; i < pages.length; i++) {
-                    const canvas = await html2canvas(pages[i], { scale: 1.5 });
-                    const imgData = canvas.toDataURL('image/jpeg', 0.8);
-                    if (i > 0) pdf.addPage('a5', 'p');
-                    pdf.addImage(imgData, 'JPEG', 0, 0, 148, 210);
-                    if (i % 5 === 0) await new Promise(r => setTimeout(r, 100));
-                }
-                
-                pdf.save(fileName);
-                alert(fileName + " အမည်ဖြင့် PDF သိမ်းဆည်းပြီးပါပြီ။");
-            }
-        } catch (err) {
-            console.error(err);
-            alert("share မလုပ်ရ‌‌ပါ။ ပြန်စမ်းကြည့်ပါ။");
-        } finally {
-            btn.innerText = originalText;
-            btn.disabled = false;
-        }
-    }
-
     function generateSingle() {
         const date = document.getElementById('inDate').value;
-        const outT = document.getElementById('inTime').value;
-        const inT = document.getElementById('resInTime').value;
-        if(!outT || !date) { alert("ရက်စွဲနှင့် အချိန်ဖြည့်ပါ"); return; }
-        document.getElementById('actionBtn').innerText = "Share လုပ်မည်"; // တစ်စောင်တည်းဆိုလျှင် Share ဟုပြပါမည်
-        document.getElementById('pages-container').innerHTML = createVoucherHTML(document.getElementById('inDept').value, document.getElementById('inReason').value, date, outT, inT);
-        showOutput();
-    }
-
-    function generateBulk() {
-        const monthVal = document.getElementById('bulkMonth').value;
-        const outT = document.getElementById('inTime').value;
-        const inT = document.getElementById('resInTime').value;
-        if(!monthVal || !outT) { alert("အချက်အလက်များ ပြည့်စုံစွာဖြည့်ပါ"); return; }
-        document.getElementById('actionBtn').innerText = "PDF သိမ်းဆည်းမည်"; // အများကြီးဆိုလျှင် PDF သိမ်းဆည်းမည် ဟုပြပါမည်
-        
-        let [year, month] = monthVal.split('-').map(Number);
-        let daysInMonth = new Date(year, month, 0).getDate();
-        let bulkHTML = "";
-        for (let day = 1; day <= daysInMonth; day++) {
-            let d = new Date(year, month - 1, day);
-            if (d.getDay() !== 0 && d.getDay() !== 6) {
-                bulkHTML += createVoucherHTML(document.getElementById('inDept').value, document.getElementById('inReason').value, day + "-" + month + "-" + year, outT, inT);
-            }
-        }
-        document.getElementById('pages-container').innerHTML = bulkHTML;
+        if(!date) { alert("ရက်စွဲထည့်ပါ"); return; }
+        document.getElementById('pages-container').innerHTML = createVoucherHTML(document.getElementById('inDept').value, document.getElementById('inReason').value, date, document.getElementById('inTime').value, document.getElementById('resInTime').value);
         showOutput();
     }
 
